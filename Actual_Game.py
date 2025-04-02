@@ -1,12 +1,10 @@
 import pygame
-import math
-import random
-from Wall import Wall
 from Maze import maze
 from Population import Population
 from Dot import Dot
 from Brain import Brain
 from Constants import *
+import threading
 
 #   Sets up the window and font style
 WINDOW = pygame.display.set_mode((WIDTH, HEIGHT))
@@ -24,41 +22,28 @@ maze.initialize_walls()
 maze.generate_maze()
 maze.generate_array()
 
-#   Defining some static attributes for dot. 
+#   Defining some static attributes for dot.
 Dot.startx = maze_bot.start_rect.right
 Dot.starty = maze_bot.start_rect.center[1] - Dot.h//2
 Dot.goal = maze_bot.end_rect
 
+player = pygame.Rect(0, 0, PLAYER_WIDTH, PLAYER_HEIGHT)
+clock = pygame.time.Clock()                 #   For FPS
+running = True                              #   If False, window closes
+keep_playing = 1                            #   If True, player can keep moving.
 
+pop = Population(NUMBER_OF_DOTS)            #   Initializes population of dots
+generation_num = 1                          #   Keeps track of the generation
+stepNum = 0                                 #   Keeps track of the step number at any moment
 
-
-
-def main():
-    #   Player rectangle and its starting point
-    player = pygame.Rect(0, 0, PLAYER_WIDTH, PLAYER_HEIGHT)
-    player.center = maze_player.start_rect.center
-    player.left = maze_player.start_rect.right
-
-    pop = Population(NUMBER_OF_DOTS)            #   Initializes population of dots
-
-    clock = pygame.time.Clock()                 #   For FPS
-    running = True                              #   If False, window closes
-    keep_playing = 1                            #   If True, player can keep moving.
-    generation_num = 1                          #   Keeps track of the generation
-    stepNum = 0                                 #   Keeps track of the step number at any moment
-
+def update_population():
+    global pop, generation_num, stepNum, running
+    clock2 = pygame.time.Clock()                 #   For FPS
+    
     while running:
-        clock.tick(FPS)                         #   ensures FPS
-
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:       #   If the cross on top right corner is clicked, quit
-                running = False
-            
-            if event.type == REACHED_END:       #   Triggered if player reaches the end
-                keep_playing = 0
-
         state = pop.allDead()
-
+        clock2.tick(FPS)
+        
         if state: stepNum = 0                   #   state = 0 means dots are still moving, else next generation begins and steps are reset
         if state == 1:                          #   state = 1 means some dots still had steps left, so we can safely increase steps
             Brain.stepCount += DELTA_STEP
@@ -74,15 +59,41 @@ def main():
             generation_num += 1
         pop.update()                            #   Updates motion of population
 
+def update_player():
+    global keep_playing, player
+    keys_pressed = pygame.key.get_pressed()
+
+    if keys_pressed[pygame.K_RETURN]:       #   if Enter key was pressed, Reset the game.
+        keep_playing = 1
+        player.center = maze_player.start_rect.center
+        player.left = maze_player.start_rect.right
+    if keep_playing: movement_player(keys_pressed, player)
+
+def main():
+    #   Player rectangle's starting point
+    global player, keep_playing, running, stepNum
+    player.center = maze_player.start_rect.center
+    player.left = maze_player.start_rect.right
+
+    pop_thread = threading.Thread(target=update_population)  #   Thread for updating population
+    pop_thread.start()
+
+    while running:
+        clock.tick(FPS)                         #   ensures FPS
+
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:       #   If the cross on top right corner is clicked, quit
+                running = False
+            
+            if event.type == REACHED_END:       #   Triggered if player reaches the end
+                keep_playing = 0
+
+        update_player()
+
         draw_window(player, not keep_playing, pop, generation_num, stepNum)
         stepNum += 1
-        
-        keys_pressed = pygame.key.get_pressed()
-        if keys_pressed[pygame.K_RETURN]:       #   if Enter key was pressed, Reset the game.
-            keep_playing = 1
-            player.center = maze_player.start_rect.center
-            player.left = maze_player.start_rect.right
-        if keep_playing: movement_player(keys_pressed, player)
+
+    pop_thread.join()  #   Wait for the population thread to finish
 
     # Outside Loop. Quit Window
     pygame.quit()
@@ -99,7 +110,7 @@ def draw_window(player, write_win_text, population, generation, steps):
     pygame.draw.rect(WINDOW, PLAYER_COLOR, player)
 
     #   Player Text
-    if write_win_text: write_text_center('YOU WON!!', maze_player.rect.center)
+    if write_win_text: write_text_center('YOU WON!!', maze_player.rect.center, BLACK)
     write_text_center('Press Enter to Reset', (maze_player.rect.center[0], maze_player.rect.bottom + FONT_SIZE//2))
 
     #   Dots
@@ -113,8 +124,8 @@ def draw_window(player, write_win_text, population, generation, steps):
     pygame.display.update()
 
 #   Writes given text where the given coordinates will be the center of the text.
-def write_text_center(wanna_print, center):
-    text = FONT.render(wanna_print, True, TEXT_COLOR)
+def write_text_center(wanna_print, center, text_color=TEXT_COLOR):
+    text = FONT.render(wanna_print, True, text_color)
     x = center[0] - text.get_rect().width//2
     y = center[1] - text.get_rect().height//2
     WINDOW.blit(text, (x, y))

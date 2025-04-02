@@ -21,7 +21,7 @@ DARK_BLUE = (0, 0, 128)
 
 #   Assigned Colors. Change from here to customize the visuals. I think the names are self-explanatory
 WINDOW_COLOR = PURPLE
-TEXT_COLOR = BLACK
+TEXT_COLOR = WHITE
 MAZE_COLOR = WHITE
 WALL_COLOR = ORANGE
 START_COLOR = BLUE
