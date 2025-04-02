@@ -2,34 +2,34 @@ import math
 import random
 
 # A 2-dimensional Vector
-class vector:
+class Vector:
     def __init__(self):
         self.x = 0
         self.y = 0
 
-    # Constructor, takes the components of vector as input
+    # Constructor, takes the components of Vector as input
     def __init__(self, x , y):
         self.x = x
         self.y = y
 
-    # returns sum of 2 vectors
+    # returns sum of 2 Vectors
     def add(u, v):
-        return vector(u.x + v.x, u.y + v.y)
+        return Vector(u.x + v.x, u.y + v.y)
 
     # adds in-place
     def add(self, v):
         self.x += v.x
         self.y += v.y
 
-    # ensures unary - operator works with a vector
+    # ensures unary - operator works with a Vector
     def __neg__(self):
-        return vector(-self.x, -self.y)
+        return Vector(-self.x, -self.y)
 
-    # Given an angle, returns the unit vector for that angle.
+    # Given an angle, returns the unit Vector for that angle.
     def fromAngle(angle):
-        return vector(math.cos(angle), math.sin(angle))
+        return Vector(math.cos(angle), math.sin(angle))
 
-    # Limits the magnitude of the vector
+    # Limits the magnitude of the Vector
     def limit(self, mx):
         mg = self.mag()
         if mg > mx:
@@ -43,23 +43,23 @@ class vector:
         self.x /= mg
         self.y /= mg
 
-    # returns magnitude of a vector
+    # returns magnitude of a Vector
     def mag(self):
         return math.sqrt(self.x**2 + self.y**2)
 
-    # returns distance between 2 vectors
+    # returns distance between 2 Vectors
     def dist(a,b, x,y):
         return math.sqrt((x-a)**2 + (y-b)**2)
 
-    # ensures print(vector) works
+    # ensures print(Vector) works
     def __str__(self):
         return str(self.x) + ' ' + str(self.y)
 
-    # returns a copy of the vector
+    # returns a copy of the Vector
     def copy(self):
-        return vector(self.x, self.y)
+        return Vector(self.x, self.y)
 
-    # returns a random unit vector
+    # returns a random unit Vector
     def random_dir():
         rnd = random.randint(0, 360)
-        return vector.fromAngle(rnd)
+        return Vector.fromAngle(rnd)

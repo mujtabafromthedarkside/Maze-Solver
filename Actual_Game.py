@@ -110,7 +110,7 @@ def draw_window(player, write_win_text, population, generation, steps):
     pygame.draw.rect(WINDOW, PLAYER_COLOR, player)
 
     #   Player Text
-    if write_win_text: write_text_center('YOU WON!!', maze_player.rect.center, BLACK)
+    if write_win_text: write_text_center('GAME OVER!!', maze_player.rect.center, BLACK)
     write_text_center('Press Enter to Reset', (maze_player.rect.center[0], maze_player.rect.bottom + FONT_SIZE//2))
 
     #   Dots
